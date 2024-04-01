@@ -6,21 +6,21 @@ module aa::account {
     use sui::transfer;
     use sui::coin::{Coin, Self};
     use sui::dynamic_field as df;
+    use sui::sui::SUI;
 
     const EUnauthorizedAccess: u64 = 0;
     const EZeroBalance: u64 = 1;
     const EBalanceUnavailable: u64 = 2;
-    const EPromiseAlreadyExists: u64 = 3;
 
     friend aa::cetus_router;
 
     struct BalanceDfKey<phantom FT> has copy, store, drop {}
-    struct PromiseDfKey<phantom FT> has copy, store, drop { amount: u64 }
     
     struct Account has key, store {
         id: UID,
         owner: address,
         delegate: address,
+        sui_balance: Balance<SUI>,
         restricted: bool,
         dfs: UID,
     }
@@ -30,11 +30,16 @@ module aa::account {
         account_id: ID,
     }
 
-    struct CoinPromise<phantom FT> {
-        account_id: ID,
-        amount: u64,
+    struct XCoin<phantom FT> {
+        coin: Coin<FT>
     }
 
+    // struct CoinPromise<phantom FT> {
+    //     account_id: ID,
+    //     amount: u64,
+    // }
+
+    // TODO: new() signed by delegate
     public fun new(delegate: address, ctx: &mut TxContext) {
         let sender = sender(ctx);
 
@@ -45,6 +50,7 @@ module aa::account {
             id: account_uid,
             owner: sender,
             delegate,
+            sui_balance: balance::zero(),
             restricted: false,
             dfs: object::new(ctx),
         };
@@ -55,6 +61,30 @@ module aa::account {
         };
 
         transfer::transfer(account_cap, sender);
+        transfer::share_object(account);
+    }
+
+    public fun new_as_delegate(owner: address, ctx: &mut TxContext) {
+        let sender = sender(ctx);
+
+        let account_uid = object::new(ctx);
+        let account_id = object::uid_to_inner(&account_uid);
+        
+        let account = Account {
+            id: account_uid,
+            owner,
+            delegate: sender,
+            sui_balance: balance::zero(),
+            restricted: false,
+            dfs: object::new(ctx),
+        };
+
+        let account_cap = AccountCap {
+            id: object::new(ctx),
+            account_id,
+        };
+
+        transfer::transfer(account_cap, owner);
         transfer::share_object(account);
     }
 
@@ -69,7 +99,7 @@ module aa::account {
         balance::join(balance, coin::into_balance(coin));
     }
 
-    public fun withdraw_with_promise<FT>(account: &mut Account, amount: u64, ctx: &mut TxContext): (Coin<FT>, CoinPromise<FT>) {
+    public fun withdraw_with_promise<FT>(account: &mut Account, amount: u64, ctx: &mut TxContext): (XCoin<FT>) {
         assert_delegate(account, ctx);
         
         let balance_exists = df::exists_(dfs(account), BalanceDfKey<FT> {});
@@ -80,31 +110,20 @@ module aa::account {
 
         let coin = coin::from_balance(balance::split(balance, amount), ctx);
 
-        let promise = request_promise<FT>(account, amount);
-
-        (coin, promise)
+        XCoin { coin }
     }
 
-    public(friend) fun use_promise<FT>(account: &mut Account, coin: &Coin<FT>) {
-        let amount = coin::value(coin);
-        
-        let state: &mut bool = df::borrow_mut(dfs_mut(account), PromiseDfKey<FT> { amount });
-        *state = used();
+    public fun inner<FT>(x_coin: &XCoin<FT>): &Coin<FT> {
+        &x_coin.coin
     }
-
-    fun request_promise<FT>(account: &mut Account, amount: u64): CoinPromise<FT> {
-        let has_promise = df::exists_(dfs(account), PromiseDfKey<FT> { amount });
-
-        assert!(!has_promise, EPromiseAlreadyExists);
-
-        df::add(
-            dfs_mut(account), PromiseDfKey<FT> { amount }, unused()
-        );
-
-        CoinPromise<FT> {
-            account_id: object::uid_to_inner(&account.id),
-            amount,
-        }
+    
+    public(friend) fun wrap<FT>(coin: Coin<FT>): XCoin<FT> {
+        XCoin { coin }
+    }
+    
+    public(friend) fun unwrap<FT>(x_coin: XCoin<FT>): Coin<FT> {
+        let XCoin { coin } = x_coin;
+        coin
     }
 
     public fun assert_delegate(account: &Account, ctx: &TxContext) {

@@ -7,12 +7,12 @@ module aa::cetus_router {
     use sui::coin::Coin;
     use sui::tx_context::TxContext;
 
-    use aa::account::{Self, Account};
+    use aa::account::{Self, Account, XCoin, unwrap, wrap, inner};
 
     public fun swap_ab<A, B>(
         config: &GlobalConfig,
         pool: &mut Pool<A, B>,
-        input_funds: Coin<A>,
+        input_funds: XCoin<A>,
         output_funds: Coin<B>,
         a2b: bool,
         by_amount_in: bool,
@@ -24,10 +24,9 @@ module aa::cetus_router {
         clock: &Clock,
         account: &mut Account,
         ctx: &mut TxContext
-    ) {
+    ): (XCoin<A>, XCoin<B>) {
         account::assert_delegate(account, ctx);
-        account::use_promise(account, &input_funds);
-        account::use_promise(account, &output_funds);
+        let input_funds = unwrap(input_funds);
 
         let (coin_a, coin_b) = router::swap(
             config,
@@ -43,14 +42,13 @@ module aa::cetus_router {
             ctx
         );
 
-        account::deposit(account, coin_a);
-        account::deposit(account, coin_b);
+        (wrap(coin_a), wrap(coin_b))
     }
     
     public fun swap_ba<A, B>(
         config: &GlobalConfig,
         pool: &mut Pool<A, B>,
-        input_funds: Coin<B>,
+        input_funds: XCoin<B>,
         output_funds: Coin<A>,
         a2b: bool,
         by_amount_in: bool,
@@ -62,10 +60,9 @@ module aa::cetus_router {
         clock: &Clock,
         account: &mut Account,
         ctx: &mut TxContext
-    ) {
+    ): (XCoin<A>, XCoin<B>) {
         account::assert_delegate(account, ctx);
-        account::use_promise(account, &input_funds);
-        account::use_promise(account, &output_funds);
+        let input_funds = unwrap(input_funds);
         
         let (coin_a, coin_b) = router::swap(
             config,
@@ -81,15 +78,14 @@ module aa::cetus_router {
             ctx
         );
 
-        account::deposit(account, coin_a);
-        account::deposit(account, coin_b);
+        (wrap(coin_a), wrap(coin_b))
     }
 
     public fun swap_ab_bc<A, B, C>(
         config: &GlobalConfig,
         pool_i: &mut Pool<A, B>,
         pool_ii: &mut Pool<B, C>,
-        input_funds: Coin<A>,
+        input_funds: XCoin<A>,
         output_funds: Coin<C>,
         by_amount_in: bool,
         amount_0: u64, // TODO: Consider removing to eliminate redundancy or keep to mitigate interface changes
@@ -99,10 +95,9 @@ module aa::cetus_router {
         clock: &Clock,
         account: &mut Account,
         ctx: &mut TxContext
-    ) {
+    ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
-        account::use_promise(account, &input_funds);
-        account::use_promise(account, &output_funds);
+        let input_funds = unwrap(input_funds);
 
         let (coin_a, coin_c) = router::swap_ab_bc(
             config,
@@ -119,15 +114,14 @@ module aa::cetus_router {
             ctx
         );
 
-        account::deposit(account, coin_a);
-        account::deposit(account, coin_c);
+        (wrap(coin_a), wrap(coin_c))
     }
 
     public fun swap_ab_cb<A, B, C>(
         config: &GlobalConfig,
         pool_i: &mut Pool<A,B>,
         pool_ii: &mut Pool<C,B>,
-        input_funds: Coin<A>,
+        input_funds: XCoin<A>,
         output_funds: Coin<C>,
         by_amount_in: bool,
         amount_0: u64,
@@ -137,10 +131,9 @@ module aa::cetus_router {
         clock: &Clock,
         account: &mut Account,
         ctx: &mut TxContext
-    ) {
+    ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
-        account::use_promise(account, &input_funds);
-        account::use_promise(account, &output_funds);
+        let input_funds = unwrap(input_funds);
 
         let (coin_a, coin_c) = router::swap_ab_cb(
             config,
@@ -157,15 +150,14 @@ module aa::cetus_router {
             ctx
         );
 
-        account::deposit(account, coin_a);
-        account::deposit(account, coin_c);
+        (wrap(coin_a), wrap(coin_c))
     }
 
     public fun swap_ba_bc<A, B, C>(
         config: &GlobalConfig,
         pool_i: &mut Pool<B, A>,
         pool_ii: &mut Pool<B, C>,
-        input_funds: Coin<A>,
+        input_funds: XCoin<A>,
         output_funds: Coin<C>,
         by_amount_in: bool,
         amount_0: u64,
@@ -173,13 +165,11 @@ module aa::cetus_router {
         sqrt_price_limit_0: u128,
         sqrt_price_limit_1: u128,
         clock: &Clock,
-        output_threshold: u64,
         account: &mut Account,
         ctx: &mut TxContext
-    ) {
+    ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
-        account::use_promise(account, &input_funds);
-        account::use_promise(account, &output_funds);
+        let input_funds = unwrap(input_funds);
 
         let (coin_a, coin_c) = router::swap_ba_bc(
             config,
@@ -196,15 +186,14 @@ module aa::cetus_router {
             ctx
         );
 
-        account::deposit(account, coin_a);
-        account::deposit(account, coin_c);
+        (wrap(coin_a), wrap(coin_c))
     }
 
     public fun swap_ba_cb<A, B, C>(
         config: &GlobalConfig,
         pool_i: &mut Pool<B, A>,
         pool_ii: &mut Pool<C,B>,
-        input_funds: Coin<A>,
+        input_funds: XCoin<A>,
         output_funds: Coin<C>,
         by_amount_in: bool,
         amount_0: u64,
@@ -212,13 +201,11 @@ module aa::cetus_router {
         sqrt_price_limit_0: u128,
         sqrt_price_limit_1: u128,
         clock: &Clock,
-        output_threshold: u64,
         account: &mut Account,
         ctx: &mut TxContext
-    ) {
+    ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
-        account::use_promise(account, &input_funds);
-        account::use_promise(account, &output_funds);
+        let input_funds = unwrap(input_funds);
 
         let (coin_a, coin_c) = router::swap_ba_cb(
             config,
@@ -235,8 +222,7 @@ module aa::cetus_router {
             ctx
         );
 
-        account::deposit(account, coin_a);
-        account::deposit(account, coin_c);
+        (wrap(coin_a), wrap(coin_c))
     }
 
     public fun calculate_router_swap_result<Ty0, Ty1, Ty2, Ty3>(
@@ -257,7 +243,7 @@ module aa::cetus_router {
         )
     }
 
-    public fun check_coin_threshold<Output>(arg_0: &Coin<Output>, arg_1: u64) {
-        router::check_coin_threshold(arg_0, arg_1)
+    public fun check_coin_threshold<Output>(arg_0: &XCoin<Output>, arg_1: u64) {
+        router::check_coin_threshold(inner(arg_0), arg_1)
     }
 }
