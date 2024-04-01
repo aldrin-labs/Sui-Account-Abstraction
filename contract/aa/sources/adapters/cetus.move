@@ -1,4 +1,3 @@
-#[allow(lint(self_transfer))]
 module aa::cetus_router {
     use cetus_clmm::config::GlobalConfig;
     use cetus_clmm::pool::Pool;
@@ -26,6 +25,8 @@ module aa::cetus_router {
         ctx: &mut TxContext
     ): (XCoin<A>, XCoin<B>) {
         account::assert_delegate(account, ctx);
+        account::assert_origin(account, &input_funds);
+
         let input_funds = unwrap(input_funds);
 
         let (coin_a, coin_b) = router::swap(
@@ -42,7 +43,7 @@ module aa::cetus_router {
             ctx
         );
 
-        (wrap(coin_a), wrap(coin_b))
+        (wrap(account, coin_a), wrap(account, coin_b))
     }
     
     public fun swap_ba<A, B>(
@@ -62,6 +63,7 @@ module aa::cetus_router {
         ctx: &mut TxContext
     ): (XCoin<A>, XCoin<B>) {
         account::assert_delegate(account, ctx);
+        account::assert_origin(account, &input_funds);
         let input_funds = unwrap(input_funds);
         
         let (coin_a, coin_b) = router::swap(
@@ -78,7 +80,7 @@ module aa::cetus_router {
             ctx
         );
 
-        (wrap(coin_a), wrap(coin_b))
+        (wrap(account, coin_a), wrap(account, coin_b))
     }
 
     public fun swap_ab_bc<A, B, C>(
@@ -88,7 +90,7 @@ module aa::cetus_router {
         input_funds: XCoin<A>,
         output_funds: Coin<C>,
         by_amount_in: bool,
-        amount_0: u64, // TODO: Consider removing to eliminate redundancy or keep to mitigate interface changes
+        amount_0: u64,
         amount_1: u64,
         sqrt_price_limit_0: u128,
         sqrt_price_limit_1: u128,
@@ -97,6 +99,7 @@ module aa::cetus_router {
         ctx: &mut TxContext
     ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
+        account::assert_origin(account, &input_funds);
         let input_funds = unwrap(input_funds);
 
         let (coin_a, coin_c) = router::swap_ab_bc(
@@ -114,7 +117,7 @@ module aa::cetus_router {
             ctx
         );
 
-        (wrap(coin_a), wrap(coin_c))
+        (wrap(account, coin_a), wrap(account, coin_c))
     }
 
     public fun swap_ab_cb<A, B, C>(
@@ -133,6 +136,7 @@ module aa::cetus_router {
         ctx: &mut TxContext
     ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
+        account::assert_origin(account, &input_funds);
         let input_funds = unwrap(input_funds);
 
         let (coin_a, coin_c) = router::swap_ab_cb(
@@ -150,7 +154,7 @@ module aa::cetus_router {
             ctx
         );
 
-        (wrap(coin_a), wrap(coin_c))
+        (wrap(account, coin_a), wrap(account, coin_c))
     }
 
     public fun swap_ba_bc<A, B, C>(
@@ -169,6 +173,8 @@ module aa::cetus_router {
         ctx: &mut TxContext
     ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
+        account::assert_origin(account, &input_funds);
+
         let input_funds = unwrap(input_funds);
 
         let (coin_a, coin_c) = router::swap_ba_bc(
@@ -186,7 +192,7 @@ module aa::cetus_router {
             ctx
         );
 
-        (wrap(coin_a), wrap(coin_c))
+        (wrap(account, coin_a), wrap(account, coin_c))
     }
 
     public fun swap_ba_cb<A, B, C>(
@@ -205,6 +211,8 @@ module aa::cetus_router {
         ctx: &mut TxContext
     ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
+        account::assert_origin(account, &input_funds);
+        
         let input_funds = unwrap(input_funds);
 
         let (coin_a, coin_c) = router::swap_ba_cb(
@@ -222,7 +230,7 @@ module aa::cetus_router {
             ctx
         );
 
-        (wrap(coin_a), wrap(coin_c))
+        (wrap(account, coin_a), wrap(account, coin_c))
     }
 
     public fun calculate_router_swap_result<Ty0, Ty1, Ty2, Ty3>(

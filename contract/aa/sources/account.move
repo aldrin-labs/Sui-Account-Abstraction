@@ -11,8 +11,10 @@ module aa::account {
     const EUnauthorizedAccess: u64 = 0;
     const EZeroBalance: u64 = 1;
     const EBalanceUnavailable: u64 = 2;
+    const EOriginMismatch: u64 = 3;
 
     friend aa::cetus_router;
+    friend aa::flowx_router;
 
     struct BalanceDfKey<phantom FT> has copy, store, drop {}
     
@@ -31,6 +33,7 @@ module aa::account {
     }
 
     struct XCoin<phantom FT> {
+        origin: ID,
         coin: Coin<FT>
     }
 
@@ -110,20 +113,24 @@ module aa::account {
 
         let coin = coin::from_balance(balance::split(balance, amount), ctx);
 
-        XCoin { coin }
+        wrap(account, coin)
     }
 
     public fun inner<FT>(x_coin: &XCoin<FT>): &Coin<FT> {
         &x_coin.coin
     }
     
-    public(friend) fun wrap<FT>(coin: Coin<FT>): XCoin<FT> {
-        XCoin { coin }
+    public(friend) fun wrap<FT>(account: &Account, coin: Coin<FT>): XCoin<FT> {
+        XCoin { origin: object::uid_to_inner(&account.id), coin }
     }
     
     public(friend) fun unwrap<FT>(x_coin: XCoin<FT>): Coin<FT> {
-        let XCoin { coin } = x_coin;
+        let XCoin { origin: _, coin } = x_coin;
         coin
+    }
+    
+    public(friend) fun assert_origin<FT>(account: &Account, x_coin: &XCoin<FT>) {
+        assert!(object::uid_to_inner(&account.id) == x_coin.origin, EOriginMismatch)
     }
 
     public fun assert_delegate(account: &Account, ctx: &TxContext) {
