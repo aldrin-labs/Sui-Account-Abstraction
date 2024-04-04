@@ -12,7 +12,7 @@ module aa::cetus_router {
         config: &GlobalConfig,
         pool: &mut Pool<A, B>,
         input_funds: XCoin<A>,
-        output_funds: Coin<B>,
+        output_funds: XCoin<B>,
         a2b: bool,
         by_amount_in: bool,
         amount: u64,
@@ -26,8 +26,10 @@ module aa::cetus_router {
     ): (XCoin<A>, XCoin<B>) {
         account::assert_delegate(account, ctx);
         account::assert_origin(account, &input_funds);
+        account::assert_origin(account, &output_funds);
 
         let input_funds = unwrap(input_funds);
+        let output_funds = unwrap(output_funds);
 
         let (coin_a, coin_b) = router::swap(
             config,
@@ -50,7 +52,7 @@ module aa::cetus_router {
         config: &GlobalConfig,
         pool: &mut Pool<A, B>,
         input_funds: XCoin<B>,
-        output_funds: Coin<A>,
+        output_funds: XCoin<A>,
         a2b: bool,
         by_amount_in: bool,
         amount: u64,
@@ -64,7 +66,10 @@ module aa::cetus_router {
     ): (XCoin<A>, XCoin<B>) {
         account::assert_delegate(account, ctx);
         account::assert_origin(account, &input_funds);
+        account::assert_origin(account, &output_funds);
+
         let input_funds = unwrap(input_funds);
+        let output_funds = unwrap(output_funds);
         
         let (coin_a, coin_b) = router::swap(
             config,
@@ -88,7 +93,7 @@ module aa::cetus_router {
         pool_i: &mut Pool<A, B>,
         pool_ii: &mut Pool<B, C>,
         input_funds: XCoin<A>,
-        output_funds: Coin<C>,
+        output_funds: XCoin<C>,
         by_amount_in: bool,
         amount_0: u64,
         amount_1: u64,
@@ -100,7 +105,10 @@ module aa::cetus_router {
     ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
         account::assert_origin(account, &input_funds);
+        account::assert_origin(account, &output_funds);
+
         let input_funds = unwrap(input_funds);
+        let output_funds = unwrap(output_funds);
 
         let (coin_a, coin_c) = router::swap_ab_bc(
             config,
@@ -162,7 +170,7 @@ module aa::cetus_router {
         pool_i: &mut Pool<B, A>,
         pool_ii: &mut Pool<B, C>,
         input_funds: XCoin<A>,
-        output_funds: Coin<C>,
+        output_funds: XCoin<C>,
         by_amount_in: bool,
         amount_0: u64,
         amount_1: u64,
@@ -174,8 +182,10 @@ module aa::cetus_router {
     ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
         account::assert_origin(account, &input_funds);
+        account::assert_origin(account, &output_funds);
 
         let input_funds = unwrap(input_funds);
+        let output_funds = unwrap(output_funds);
 
         let (coin_a, coin_c) = router::swap_ba_bc(
             config,
@@ -200,7 +210,7 @@ module aa::cetus_router {
         pool_i: &mut Pool<B, A>,
         pool_ii: &mut Pool<C,B>,
         input_funds: XCoin<A>,
-        output_funds: Coin<C>,
+        output_funds: XCoin<C>,
         by_amount_in: bool,
         amount_0: u64,
         amount_1: u64,
@@ -212,8 +222,10 @@ module aa::cetus_router {
     ): (XCoin<A>, XCoin<C>) {
         account::assert_delegate(account, ctx);
         account::assert_origin(account, &input_funds);
+        account::assert_origin(account, &output_funds);
         
         let input_funds = unwrap(input_funds);
+        let output_funds = unwrap(output_funds);
 
         let (coin_a, coin_c) = router::swap_ba_cb(
             config,

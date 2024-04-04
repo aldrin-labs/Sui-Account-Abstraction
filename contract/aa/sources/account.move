@@ -3,7 +3,7 @@ module aa::account {
     use sui::object::{Self, UID, ID};
     use sui::tx_context::{TxContext, sender};
     use sui::balance::{Self, Balance};
-    use sui::transfer;
+    use sui::transfer::{Self, Receiving};
     use sui::coin::{Coin, Self};
     use sui::dynamic_field as df;
     use sui::sui::SUI;
@@ -15,10 +15,12 @@ module aa::account {
 
     friend aa::cetus_router;
     friend aa::flowx_router;
+    friend aa::turbos_swap_router;
+    friend aa::deepbook_clob_v2;
 
     struct BalanceDfKey<phantom FT> has copy, store, drop {}
     
-    struct Account has key, store {
+    struct Account has key {
         id: UID,
         owner: address,
         delegate: address,
@@ -116,8 +118,30 @@ module aa::account {
         wrap(account, coin)
     }
 
+    public fun return_coin<FT>(account: &mut Account, x_coin: XCoin<FT>) {
+        let XCoin { origin, coin } = x_coin;
+        assert!(object::uid_to_inner(&account.id) == origin, 0);
+
+        deposit(account, coin);
+    }
+
+    /// This function will receive a coin sent to the `Account` object and then
+    /// join it to the balance for each coin type.
+    /// Dynamic fields are used to index the balances by their coin type.
+    public fun accept_payment<T>(account: &mut Account, sent: Receiving<Coin<T>>) {
+        // Receive the coin that was sent to the `account` object
+        // Since `Coin` is not defined in this module, and since it has the `store`
+        // ability we receive the coin object using the `transfer::public_receive` function.
+        let coin = transfer::receive(&mut account.id, sent);
+        deposit(account, coin);
+    }
+
     public fun inner<FT>(x_coin: &XCoin<FT>): &Coin<FT> {
         &x_coin.coin
+    }
+    
+    public fun receiver(account: &Account): address {
+        object::id_to_address(object::uid_as_inner(&account.id))
     }
     
     public(friend) fun wrap<FT>(account: &Account, coin: Coin<FT>): XCoin<FT> {

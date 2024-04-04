@@ -7,8 +7,10 @@ version = "0.0.1"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "mainnet-v1.19.1" }
+DeepBook = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/deepbook", rev = "mainnet-v1.19.1" }
 Cetus = { local = "../interfaces/cetus/cetus" }
 FlowXAMM = { local = "../interfaces/flow_x" }
+TurbosCLMM = { local = "../interfaces/turbos" }
 
 # For remote import, use the `{ git = "...", subdir = "...", rev = "..." }`.
 # Revision can be a branch, a tag, and a commit hash.
